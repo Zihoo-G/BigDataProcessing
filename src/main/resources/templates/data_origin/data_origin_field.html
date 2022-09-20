@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>大数据智能加工系统</title>
+  <!-- Favicon icon -->
+  <link rel="icon" type="image/png" sizes="16x16" th:href="@{/images/favicon.png}">
+  <!-- Custom Stylesheet -->
+  <link th:href="@{/plugins/tables/css/datatable/dataTables.bootstrap4.min.css}" rel="stylesheet">
+  <link th:href="@{/plugins/toastr/css/toastr.min.css}" rel="stylesheet">
+  <link th:href="@{/css/style.css}" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/ztree/zTreeStyle.css}" type="text/css">
+</head>
+
+<body>
+
+<div th:replace="~{commons/commons::placeholder}"></div>
+
+
+<!--**********************************
+    Main wrapper start
+***********************************-->
+<div id="main-wrapper">
+
+
+  <div th:replace="~{commons/commons::nav-header}"></div>
+  <div th:replace="~{commons/commons::header}"></div>
+  <div th:replace="~{commons/commons::sidebar}"></div>
+
+
+
+  <!--**********************************
+      Content body start
+  ***********************************-->
+  <div class="content-body">
+
+    <div class="row page-titles mx-0">
+      <div class="col p-md-0">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="javascript:void(0)">Dashboard</a></li>
+          <li class="breadcrumb-item active"><a href="javascript:void(0)">Home</a></li>
+        </ol>
+      </div>
+    </div>
+    <!-- row -->
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-6">
+          <div class="card">
+            <div class="card-body">
+              <h4 class="card-title">Data Table</h4>
+              <div class="zTreeDemoBackground left">
+                <ul id="treeDemo" class="ztree"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- #/ container -->
+  </div>
+  <!--**********************************
+      Content body end
+  ***********************************-->
+
+  <!-- footer -->
+  <div th:replace="commons/commons::footer"></div>
+
+
+
+</div>
+<!--**********************************
+    Main wrapper end
+***********************************-->
+
+<!--**********************************
+    Scripts
+***********************************-->
+<script th:src="@{/plugins/common/common.min.js}"></script>
+<script th:src="@{/js/custom.min.js}"></script>
+<script th:src="@{/js/settings.js}"></script>
+<script th:src="@{/js/gleek.js}"></script>
+<script th:src="@{/js/styleSwitcher.js}"></script>
+
+<script th:src="@{/plugins/tables/js/jquery.dataTables.min.js}"></script>
+<script th:src="@{/plugins/jquery-validation/jquery.validate.min.js}"></script>
+<script th:src="@{/plugins/tables/js/datatable/dataTables.bootstrap4.min.js}"></script>
+<script th:src="@{/plugins/tables/js/datatable-init/datatable-basic.min.js}"></script>
+
+<script th:src="@{/plugins/toastr/js/toastr.min.js}"></script>
+<script th:src="@{/plugins/toastr/js/toastr.init.js}"></script>
+<script th:src="@{/js/ztree/jquery.ztree.core.min.js}"></script>
+<script th:src="@{/js/ztree/jquery.ztree.excheck.min.js}"></script>
+<script th:src="@{/js/ztree/jquery.ztree.exedit.min.js}"></script>
+
+<script>
+  let columns = [];
+  let tables = [];
+  let zNodes = [];
+  var log, className = "dark";
+  function beforeDrag(treeId, treeNodes) {
+    return false;
+  }
+  function beforeEditName(treeId, treeNode) {
+    className = (className === "dark" ? "":"dark");
+    showLog("[ "+getTime()+" beforeEditName ]&nbsp;&nbsp;&nbsp;&nbsp; " + treeNode.name);
+    var zTree = $.fn.zTree.getZTreeObj("treeDemo");
+    zTree.selectNode(treeNode);
+    setTimeout(function() {
+      if (confirm("进入节点 -- " + treeNode.name + " 的编辑状态吗？")) {
+        setTimeout(function() {
+          zTree.editName(treeNode);
+        }, 0);
+      }
+    }, 0);
+    return false;
+  }
+  function beforeRemove(treeId, treeNode) {
+    className = (className === "dark" ? "":"dark");
+    showLog("[ "+getTime()+" beforeRemove ]&nbsp;&nbsp;&nbsp;&nbsp; " + treeNode.name);
+    var zTree = $.fn.zTree.getZTreeObj("treeDemo");
+    zTree.selectNode(treeNode);
+    return confirm("确认删除 节点 -- " + treeNode.name + " 吗？");
+  }
+  function remove(treeNode) {
+    $.ajax({
+      url: '/data/origin/field/drop',
+      type: 'post',
+      dataType: 'json',
+      data: {
+        tableName: tables[treeNode.pId-1],
+        fieldName: treeNode.name
+      },
+      success: function(data) {
+        if (data.status) {
+          console.log(data)
+          if (data.status != 200) {
+            toastr.info('修改失败')
+          }
+        }
+      }
+    })
+  }
+
+  function onRemove(e, treeId, treeNode) {
+    showLog("[ "+getTime()+" onRemove ]&nbsp;&nbsp;&nbsp;&nbsp; " + treeNode.name);
+    remove(treeNode)
+  }
+
+  function rename(treeNode, newName) {
+    if(treeNode.children != null) {
+      // 更改表名
+      $.ajax({
+        url: '/data/origin/field/alert/table/name',
+        type: 'post',
+        dataType: 'json',
+        data: {
+          name: treeNode.name,
+          newName: newName
+        },
+        success: function(data) {
+
+        }
+      })
+
+    } else {
+      // 更改字段名
+      $.ajax({
+        url: '/data/origin/field/alert/field/name',
+        type: 'post',
+        dataType: 'json',
+        data: {
+          tableName: tables[treeNode.pId-1],
+          oldFieldName: treeNode.name,
+          newFieldName: newName
+        },
+        success: function(data) {
+          console.log(data.status)
+        }
+      })
+
+    }
+  }
+  function beforeRename(treeId, treeNode, newName, isCancel) {
+    className = (className === "dark" ? "":"dark");
+    showLog((isCancel ? "<span style='color:red'>":"") + "[ "+getTime()+" beforeRename ]&nbsp;&nbsp;&nbsp;&nbsp; " + treeNode.name + (isCancel ? "</span>":""));
+    if (newName.length == 0) {
+      setTimeout(function() {
+        var zTree = $.fn.zTree.getZTreeObj("treeDemo");
+        zTree.cancelEditName();
+        alert("节点名称不能为空.");
+      }, 0);
+      return false;
+    }
+
+    rename(treeNode, newName)
+    return true;
+  }
+  function onRename(e, treeId, treeNode, isCancel) {
+    showLog((isCancel ? "<span style='color:red'>":"") + "[ "+getTime()+" onRename ]&nbsp;&nbsp;&nbsp;&nbsp; " + treeNode.name + (isCancel ? "</span>":""));
+  }
+  function showRemoveBtn(treeId, treeNode) {
+    return !treeNode.isFirstNode && treeNode.children == null;
+  }
+  function showRenameBtn(treeId, treeNode) {
+    return true;
+  }
+  function showLog(str) {
+    if (!log) log = $("#log");
+    log.append("<li class='"+className+"'>"+str+"</li>");
+    if(log.children("li").length > 8) {
+      log.get(0).removeChild(log.children("li")[0]);
+    }
+  }
+  function getTime() {
+    var now= new Date(),
+            h=now.getHours(),
+            m=now.getMinutes(),
+            s=now.getSeconds(),
+            ms=now.getMilliseconds();
+    return (h+":"+m+":"+s+ " " +ms);
+  }
+
+  var newCount = 1;
+  function addHoverDom(treeId, treeNode) {
+    var sObj = $("#" + treeNode.tId + "_span");
+    if (treeNode.editNameFlag || $("#addBtn_"+treeNode.tId).length>0) return;
+    var addStr = "<span class='button add' id='addBtn_" + treeNode.tId
+            + "' title='add node' onfocus='this.blur();'></span>";
+    sObj.after(addStr);
+    var btn = $("#addBtn_"+treeNode.tId);
+    if (btn) btn.bind("click", function(){
+      var zTree = $.fn.zTree.getZTreeObj("treeDemo");
+      zTree.addNodes(treeNode, {id:(100 + newCount), pId:treeNode.id, name:"new node" + (newCount++)});
+      return false;
+    });
+  };
+  function removeHoverDom(treeId, treeNode) {
+    $("#addBtn_"+treeNode.tId).unbind().remove();
+  };
+  function selectAll() {
+    var zTree = $.fn.zTree.getZTreeObj("treeDemo");
+    zTree.setting.edit.editNameSelectAll =  true;
+  }
+
+  // 获取表的信息
+  $.ajax({
+    url: '/data/origin/field/info',
+    type: 'post',
+    dataType: 'json',
+    data: {
+
+    },
+    success: function(data) {
+      tables = data.table;
+      columns = data.column;
+      for(let i = 0; i < tables.length; i++) {
+        let table = {id: i+1, name: tables[i], pId: 0}
+        zNodes.push(table);
+      }
+
+      for(let i = 0; i < columns.length; i++) {
+        let column = {id: tables.length+i+1, pId: columns[i].pid+1, name: columns[i].name}
+        zNodes.push(column)
+      }
+      console.log(zNodes)
+      var setting = {
+        view: {
+          addHoverDom: addHoverDom,
+          removeHoverDom: removeHoverDom,
+          selectedMulti: false
+        },
+        edit: {
+          enable: true,
+          editNameSelectAll: true,
+          showRemoveBtn: showRemoveBtn,
+          showRenameBtn: showRenameBtn
+        },
+        data: {
+          simpleData: {
+            enable: true
+          }
+        },
+        callback: {
+          beforeEditName: beforeEditName,
+          beforeRemove: beforeRemove,
+          beforeRename: beforeRename,
+          onRemove: onRemove,
+          onRename: onRename
+        },
+        view: {
+          showIcon: false
+        }
+      };
+
+
+      $(document).ready(function(){
+        $.fn.zTree.init($("#treeDemo"), setting, zNodes);
+      });
+    }
+  })
+
+</script>
+
+</body>
+
+</html>

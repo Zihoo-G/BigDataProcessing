@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>大数据智能加工系统</title>
+  <!-- Favicon icon -->
+  <link rel="icon" type="image/png" sizes="16x16" th:href="@{/images/favicon.png}">
+  <!-- Custom Stylesheet -->
+  <link th:href="@{/plugins/toastr/css/toastr.min.css}" rel="stylesheet">
+  <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+
+<body>
+
+<div th:replace="~{commons/commons::placeholder}"></div>
+
+
+<!--**********************************
+    Main wrapper start
+***********************************-->
+<div id="main-wrapper">
+
+
+  <div th:replace="~{commons/commons::nav-header}"></div>
+  <div th:replace="~{commons/commons::header}"></div>
+  <div th:replace="~{commons/commons::sidebar}"></div>
+
+
+
+  <!--**********************************
+      Content body start
+  ***********************************-->
+  <div class="content-body">
+
+    <div class="row page-titles mx-0">
+      <div class="col p-md-0">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a th:href="@{/data/clear}"> >返回上一级</a></li>
+        </ol>
+      </div>
+    </div>
+    <!-- row -->
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-body">
+              <h4 class="card-title">配置项</h4>
+                <table style="width: 100% !important; height: 250px !important;" class="table">
+                  <tr>
+                    <td><label><b>文件名称：</b></label></td>
+                    <td>[[${session.file_table.getOriginalFilename()}]]</td>
+                  </tr>
+                  <tr>
+                    <td><label><b>表名：</b></label></td>
+                    <td>
+                      <input type="text" class="form-control" id="name" name="name" placeholder="将此行作为保存在数据库表名">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><label><b>字段行：</b></label></td>
+                    <td>
+                      <input type="number" class="form-control" id="field" name="field" placeholder="将此行作为保存在数据库中的字段">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><label><b>注释行：</b></label></td>
+                    <td>
+                      <input type="number" class="form-control" id="comment" name="comment" placeholder="将此行作为字段的注释">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><label><b>单位行：</b></label></td>
+                    <td>
+                      <input type="number" class="form-control" id="units" name="units" placeholder="将此行作为字段的单位">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><label><b>测试数据行：</b></label></td>
+                    <td>
+                      <input type="number" class="form-control" id="test" name="test" placeholder="将此行作为测试数据">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" align="right">
+                      <button type="button" class="btn mb-1 btn-rounded btn-outline-info" id="importBtn">开始导入</button>
+                      <a class="btn mb-1 btn-rounded btn-outline-light" th:href="@{/table/clear}">返回上一级</a>
+                    </td>
+                  </tr>
+
+              </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- #/ container -->
+  </div>
+  <!--**********************************
+      Content body end
+  ***********************************-->
+
+  <!-- footer -->
+  <div th:replace="commons/commons::footer"></div>
+
+
+
+</div>
+<!--**********************************
+    Main wrapper end
+***********************************-->
+
+<!--**********************************
+    Scripts
+***********************************-->
+<script th:src="@{/plugins/common/common.min.js}"></script>
+<script th:src="@{/js/custom.min.js}"></script>
+<script th:src="@{/js/settings.js}"></script>
+<script th:src="@{/js/gleek.js}"></script>
+<script th:src="@{/js/styleSwitcher.js}"></script>
+
+
+<script th:src="@{/plugins/jquery-validation/jquery.validate.min.js}"></script>
+
+<!-- Toastr -->
+<script th:src="@{/plugins/toastr/js/toastr.min.js}"></script>
+<script th:src="@{/plugins/toastr/js/toastr.init.js}"></script>
+<script>
+
+
+  $('#importBtn').click(function() {
+    let name = $('#name').val()
+    let field = $('#field').val()
+    let comment = $('#comment').val()
+    let units = $('#units').val()
+    let test = $('#test').val()
+
+    $.ajax({
+      url: '/table/input',
+      type: 'post',
+      dataType: 'json',
+      data: {
+        name: name,
+        field: field,
+        comment: comment,
+        units: units,
+        test: test
+      },
+      success: function(data) {
+        if (data.status == 200) {
+          toastr.info('添加成功')
+          setTimeout(function() {
+            window.location.href = '/table/importing'
+          }, 2000)
+
+          //
+        } else {
+          toastr.info('添加失败')
+        }
+      }
+    })
+
+  })
+
+</script>
+
+
+</body>
+</html>

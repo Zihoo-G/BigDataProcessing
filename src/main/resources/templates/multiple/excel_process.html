@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>大数据智能加工系统</title>
+  <!-- Favicon icon -->
+  <link rel="icon" type="image/png" sizes="16x16" th:href="@{/images/favicon.png}">
+  <!-- Custom Stylesheet -->
+  <link th:href="@{/plugins/toastr/css/toastr.min.css}" rel="stylesheet">
+  <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+
+<body>
+
+<div th:replace="~{commons/commons::placeholder}"></div>
+
+
+<!--**********************************
+    Main wrapper start
+***********************************-->
+<div id="main-wrapper">
+
+
+  <div th:replace="~{commons/commons::nav-header}"></div>
+  <div th:replace="~{commons/commons::header}"></div>
+  <div th:replace="~{commons/commons::sidebar}"></div>
+
+
+
+  <!--**********************************
+      Content body start
+  ***********************************-->
+  <div class="content-body">
+
+    <div class="row page-titles mx-0">
+      <div class="col p-md-0">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a th:href="@{/data/clear}"> >返回上一级</a></li>
+        </ol>
+      </div>
+    </div>
+    <!-- row -->
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-body">
+              <h4 class="card-title">配置项</h4>
+              <h5 class="card-body">请确保上传文件格式相同</h5>
+                <form>
+                  <table style="width: 100% !important; height: 250px !important;" class="table">
+                    <tr>
+                      <td><label><b>文件名称：</b></label></td>
+                      <td>
+                        <p th:each="file : ${file_multiple}" th:text="${file.getOriginalFilename()}"></p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><label><b>数据行：</b></label></td>
+                      <td>
+                        <input type="text" class="form-inline input-rounded col-md-2" id="dataLine">作为数据行
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><label><b>目标表：</b></label></td>
+                      <td>
+                        <select class="form-control" id="table">
+                          <option>-------请选择表-------</option>
+                          <option th:value="${name}" th:each="name : ${tableName}">
+                            [[${name}]]
+                          </option>
+                        </select>
+                      </td>
+                      <td>
+                        <a class="btn btn-outline-dark" th:href="@{/table/importing}">新建</a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><label><b>字段映射：</b></label></td>
+                      <td>
+                        <table border="1" cellpadding="0" id="field" class="table">
+                          <thead>
+                            <tr>
+                              <td>目标表字段</td>
+                              <td>源字段</td>
+                            </tr>
+                          </thead>
+                          <tbody id="field_body"></tbody>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><label><b>导入前清除数据：</b></label></td>
+                      <td>
+                        <label class="radio-inline mr-3">
+                          <input type="radio" name="optradio" value="1"> 追加</label>
+                        <label class="radio-inline mr-3">
+                          <input type="radio" name="optradio" value="2"> 覆盖</label>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colspan="2" align="right">
+                        <button type="button" class="btn mb-1 btn-rounded btn-outline-info" id="importBtn">开始导入</button>
+                        <a class="btn mb-1 btn-rounded btn-outline-light" th:href="@{/data/clear}">返回上一级</a>
+                      </td>
+                    </tr>
+                  </table>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- #/ container -->
+  </div>
+  <!--**********************************
+      Content body end
+  ***********************************-->
+
+  <!-- footer -->
+  <div th:replace="commons/commons::footer"></div>
+
+
+
+</div>
+<!--**********************************
+    Main wrapper end
+***********************************-->
+
+<!--**********************************
+    Scripts
+***********************************-->
+<script th:src="@{/plugins/common/common.min.js}"></script>
+<script th:src="@{/js/custom.min.js}"></script>
+<script th:src="@{/js/settings.js}"></script>
+<script th:src="@{/js/gleek.js}"></script>
+<script th:src="@{/js/styleSwitcher.js}"></script>
+
+
+<script th:src="@{/plugins/jquery-validation/jquery.validate.min.js}"></script>
+<!-- Toastr -->
+<script th:src="@{/plugins/toastr/js/toastr.min.js}"></script>
+<script th:src="@{/plugins/toastr/js/toastr.init.js}"></script>
+
+</body>
+<script>
+  var columnName;
+  let table_field
+  // 获取文件的字段
+  $.ajax({
+    url: '/multiple/data/file/column',
+    type: 'post',
+    dataType: 'json',
+    success: function(data) {
+      if (data.status == 200) {
+        columnName = data.columnName;
+        console.log(columnName)
+      }
+    }
+  })
+
+  $('#table').change(function(data) {
+    // 清空所有子节点
+    $('#field_body').empty()
+    console.log($('#table option:selected').val())
+    // 执行匹配字段的操作
+    $.ajax({
+      url: '/data/column',
+      type: 'post',
+      dataType: 'json',
+      data: {
+        tableName: $('#table option:selected').val()
+      },
+      success: function(data) {
+        if (data.status == 200) {
+          let tbody = document.getElementById('field_body')
+          // 目标表字段
+          table_field = data.columnName
+          console.log(table_field)
+
+          for(let i = 0; i < table_field.length; i++) {
+            let tr = document.createElement('tr')
+
+            let td1 = document.createElement('td')
+            tr.append(td1)
+            td1.innerHTML = table_field[i]
+            let td2 = document.createElement('td')
+            tr.append(td2)
+            let select = document.createElement('select')
+            for (let k = 0; k < columnName.length; k++) {
+              select.options.add(new Option(columnName[k], k))
+            }
+            select[i].selected = true
+            td2.appendChild(select)
+            tbody.appendChild(tr)
+
+          }
+        }
+      }
+    })
+  })
+
+  $('#importBtn').click(function() {
+    // 数据行
+    let dataLine = $('#dataLine').val()
+    // 目标表
+    let table = $('#table option:selected').val()
+    // 字段选项
+    let field = [];
+    console.log(table_field.size)
+    for (let i = 1; i <= table_field.length; i++) {
+      field[i-1] = $('tbody select option:selected')[i].value
+    }
+    // 1 追加 2 覆盖
+    let type = $("input[name='optradio']:checked").val()
+
+    $.ajax({
+      url: '/multiple/data/input',
+      type: 'post',
+      dataType: 'json',
+      data: {
+        dataLine: dataLine,
+        table: table,
+        field: field,
+        type: type
+      },
+      success: function(data) {
+        if (data.status == 200) {
+          toastr.info('添加成功')
+          setTimeout(function() {
+            window.location.href = '/table/importing'
+          }, 2000)
+
+          //
+        } else {
+          toastr.info('添加失败')
+        }
+      },
+      error: function(data) {
+        toastr.error("添加失败，请稍后再试")
+      }
+    })
+  })
+
+</script>
+</html>

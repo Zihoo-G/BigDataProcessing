@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>大数据智能加工系统</title>
+  <!-- Favicon icon -->
+  <link rel="icon" type="image/png" sizes="16x16" th:href="@{/images/favicon.png}">
+  <!-- Custom Stylesheet -->
+  <link th:href="@{/plugins/toastr/css/toastr.min.css}" rel="stylesheet">
+  <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+
+<body>
+
+<div th:replace="~{commons/commons::placeholder}"></div>
+
+
+<!--**********************************
+    Main wrapper start
+***********************************-->
+<div id="main-wrapper">
+
+
+  <div th:replace="~{commons/commons::nav-header}"></div>
+  <div th:replace="~{commons/commons::header}"></div>
+  <div th:replace="~{commons/commons::sidebar}"></div>
+
+
+
+  <!--**********************************
+      Content body start
+  ***********************************-->
+  <div class="content-body">
+
+    <div class="row page-titles mx-0">
+      <div class="col p-md-0">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a th:href="@{/data/clear}"> >返回上一级</a></li>
+        </ol>
+      </div>
+    </div>
+    <!-- row -->
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-body">
+              <h4 class="card-title">重复值处理</h4>
+              <table style="width: 100% !important; height: 250px !important;" class="table">
+                <tr>
+                  <td><label><b>表：</b></label></td>
+                  <td>
+                    <select class="form-control" id="table">
+                      <option>-------请选择表-------</option>
+                      <option th:value="${name}" th:each="name : ${tableName}">
+                        [[${name}]]
+                      </option>
+                    </select>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>重复值字段，默认为id</td>
+                  <td>
+                    <input type="text" name="field" id="field" class="form-control" value="id">
+                  </td>
+                </tr>
+
+
+
+                <h4 id="result"></h4>
+              </table>
+
+              <button type="button" class="btn mb-1 btn-rounded btn-success" id="search">查询重复字段</button>
+              <button type="button" class="btn mb-1 btn-rounded btn-outline-info" id="importBtn">删除重复值</button>
+              <a class="btn mb-1 btn-rounded btn-outline-light" th:href="@{/data/clear}">返回上一级</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- #/ container -->
+</div>
+<!--**********************************
+    Content body end
+***********************************-->
+
+<!-- footer -->
+<div th:replace="commons/commons::footer"></div>
+
+
+
+</div>
+<!--**********************************
+    Main wrapper end
+***********************************-->
+
+<!--**********************************
+    Scripts
+***********************************-->
+<script th:src="@{/plugins/common/common.min.js}"></script>
+<script th:src="@{/js/custom.min.js}"></script>
+<script th:src="@{/js/settings.js}"></script>
+<script th:src="@{/js/gleek.js}"></script>
+<script th:src="@{/js/styleSwitcher.js}"></script>
+
+
+<script th:src="@{/plugins/jquery-validation/jquery.validate.min.js}"></script>
+<!-- Toastr -->
+<script th:src="@{/plugins/toastr/js/toastr.min.js}"></script>
+<script th:src="@{/plugins/toastr/js/toastr.init.js}"></script>
+
+</body>
+<script>
+
+  let number = 0;
+
+  $('#search').click(function(data) {
+    $.ajax({
+      url: '/clean/repetition/number',
+      type: 'post',
+      dataType: 'json',
+      data: {
+        tableName: $('#table option:selected').val(),
+        field: $('#field').val()
+      },
+      success: function(data) {
+        if (data.status == 200) {
+          number = data.number
+          $('#result').html('本表共有 ' + number + ' 条重复数据，点击按钮一键删除')
+          toastr.info("查询成功")
+        } else {
+          toastr.info("查询失败")
+        }
+      }
+    })
+  })
+
+  $('#importBtn').click(function(data) {
+    // 获取所有输入框的值
+    let inputs = $('#field_table input')
+    let field = $('#field_search_content').val()
+    let tableName = $('#table option:selected').val()
+    let values = []
+    for(let i = 0; i < inputs.length; i++) {
+      values.push(inputs[i].value)
+    }
+
+    console.log(values)
+
+    $.ajax({
+      url: '/clean/repetition/delete',
+      type: 'post',
+      dataType: 'json',
+      data: {
+        tableName: $('#table option:selected').val(),
+        field: $('#field').val()
+      },
+      success: function(data) {
+        if (data.status == 200) {
+          toastr.info("共删除" + number + "条数据")
+        } else {
+          toastr.info("删除失败")
+        }
+      }
+    })
+
+  })
+</script>
+</html>

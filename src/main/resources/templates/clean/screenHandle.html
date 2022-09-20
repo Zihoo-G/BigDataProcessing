@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>大数据智能加工系统</title>
+  <!-- Favicon icon -->
+  <link rel="icon" type="image/png" sizes="16x16" th:href="@{/images/favicon.png}">
+  <!-- Custom Stylesheet -->
+  <link th:href="@{/plugins/toastr/css/toastr.min.css}" rel="stylesheet">
+  <link th:href="@{/css/style.css}" rel="stylesheet">
+  <style>
+    .row {
+      margin: 5px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div th:replace="~{commons/commons::placeholder}"></div>
+
+
+<!--**********************************
+    Main wrapper start
+***********************************-->
+<div id="main-wrapper">
+
+
+  <div th:replace="~{commons/commons::nav-header}"></div>
+  <div th:replace="~{commons/commons::header}"></div>
+  <div th:replace="~{commons/commons::sidebar}"></div>
+
+
+
+  <!--**********************************
+      Content body start
+  ***********************************-->
+  <div class="content-body">
+
+    <div class="row page-titles mx-0">
+      <div class="col p-md-0">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a th:href="@{/data/clear}"> >返回上一级</a></li>
+        </ol>
+      </div>
+    </div>
+    <!-- row -->
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-body">
+              <h4 class="card-title">筛选数据</h4>
+              <table style="width: 100% !important; height: 250px !important;" class="table">
+                <tr>
+                  <td><label><b>表：</b></label></td>
+                  <td>
+                    <select class="form-control" id="table">
+                      <option>-------请选择表-------</option>
+                      <option th:value="${name}" th:each="name : ${tableName}">
+                        [[${name}]]
+                      </option>
+                    </select>
+                  </td>
+                </tr>
+              </table>
+              <p>您可以通过筛选条件，将字段不符合要求的行删除。如删除年龄小于20的人，字段为age，条件为<20</p>
+              <div class="field_table"></div>
+
+              <button type="button" class="btn mb-1 btn-rounded btn-outline-info" id="add">添加条件</button>
+              <button type="button" class="btn mb-1 btn-rounded btn-outline-info" id="importBtn">删除数据</button>
+              <a class="btn mb-1 btn-rounded btn-outline-light" th:href="@{/data/clear}">返回上一级</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- #/ container -->
+</div>
+<!--**********************************
+    Content body end
+***********************************-->
+
+<!-- footer -->
+<div th:replace="commons/commons::footer"></div>
+
+
+
+</div>
+<!--**********************************
+    Main wrapper end
+***********************************-->
+
+<!--**********************************
+    Scripts
+***********************************-->
+<script th:src="@{/plugins/common/common.min.js}"></script>
+<script th:src="@{/js/custom.min.js}"></script>
+<script th:src="@{/js/settings.js}"></script>
+<script th:src="@{/js/gleek.js}"></script>
+<script th:src="@{/js/styleSwitcher.js}"></script>
+
+
+<script th:src="@{/plugins/jquery-validation/jquery.validate.min.js}"></script>
+<!-- Toastr -->
+<script th:src="@{/plugins/toastr/js/toastr.min.js}"></script>
+<script th:src="@{/plugins/toastr/js/toastr.init.js}"></script>
+
+</body>
+<script>
+
+  let columnNames = []
+
+  function addInput(data) {
+    if (columnNames == []) {
+      alert("请选择表")
+      return;
+    }
+    let option = ""
+    for (let i = 0; i < data.length; i++) {
+      option += "<option value='" + data[i] + "'>" + data[i] + "</option>"
+    }
+    // var input = $("<div class='form-group'>" +
+    //         "<label class='col-sm-1 control-label'>字段：</label>" +
+    //         "<div class='col-sm-2'>" +
+    //         "<select class='form-control' name='search_cityId'>" + option + "</select>" +
+    //         "</div>" +
+    //         "<label class='col-sm-1 control-label'>条件：</label>" +
+    //         "<div class='row'><div class='col-sm-3'>" +
+    //         "<input type='text' class='form-control' name='desc[]' placeholder='请输入折扣，最大为1，不能小于0。'></div>" +
+    //         "<button class='removeclass btn btn-danger' type='button'><span>删除</span></button></div></div>");
+
+    var input = $("<div class=\"row\">\n" +
+            "<div class='col search'>\n" +
+            "<select class='form-control' name='search'>" + option + "</select>" +
+            "</div>\n" +
+            "<div class='col'>" +
+            "<input type='text' class='form-control condition' placeholder='<20'>" +
+            "</div>" +
+            "<div class='col'><button class='removeclass btn btn-danger' type='button'><span>删除</span></button></div>" +
+            "</div>")
+    // append 表示添加在标签内， appendTo 表示添加在元素外尾
+    $(".field_table").append(input);
+  }
+
+
+  $('#add').click(function(data) {
+    addInput(columnNames)
+  })
+
+  $('#importBtn').click(function(data) {
+    let tableName = $('#table option:selected').val()
+    let selects = $('.search select option:selected')
+    let inputs = $('.condition')
+
+    // console.log("我被点击了")
+    let fields = []
+    let conditions = []
+
+    // 字段
+    for(let i = 0; i < selects.length; i++) {
+      fields.push(selects[i].value)
+    }
+
+    // 条件
+    for(let i = 0; i <inputs.length; i++) {
+      conditions.push(inputs[i].value)
+    }
+
+    $.ajax({
+      url: '/clean/screen/delete',
+      type: 'post',
+      dataType: 'json',
+      data: {
+        tableName: tableName,
+        field: JSON.stringify(fields),
+        condition: JSON.stringify(conditions)
+      },
+      success: function(data) {
+        if(data.status == 200) {
+          toastr.info("删除成功,共删除" + data.number + "条数据")
+        } else {
+          toastr.info("请检查条件是否完整与正确")
+        }
+      }
+    })
+
+  })
+  function removeAllNodes() {
+    $('.field_table').find('.row').remove()
+  }
+  $("body").on("click", ".removeclass", function (e) {
+    // remove text box
+    $(this).parent('div').parent('div').remove();
+    return false;
+  })
+  $('#table').change(function() {
+    $('#field_body').empty()
+
+    $.ajax({
+      url: '/clean/screen/column',
+      type: 'post',
+      dataType: 'json',
+      data: {
+        tableName: $('#table option:selected').val()
+      },
+      success: function(data) {
+        if(data.status == 200) {
+          console.log(data)
+          columnNames = data.columnNames;
+          console.log(columnNames)
+          removeAllNodes();
+          addInput(columnNames)
+        } else {
+          toastr.info('请求失败，请稍后重试')
+        }
+      }
+    })
+  })
+</script>
+</html>

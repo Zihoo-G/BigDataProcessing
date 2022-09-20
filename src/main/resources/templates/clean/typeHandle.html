@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>大数据智能加工系统</title>
+  <!-- Favicon icon -->
+  <link rel="icon" type="image/png" sizes="16x16" th:href="@{/images/favicon.png}">
+  <!-- Custom Stylesheet -->
+  <link th:href="@{/plugins/toastr/css/toastr.min.css}" rel="stylesheet">
+  <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+
+<body>
+
+<div th:replace="~{commons/commons::placeholder}"></div>
+
+
+<!--**********************************
+    Main wrapper start
+***********************************-->
+<div id="main-wrapper">
+
+
+  <div th:replace="~{commons/commons::nav-header}"></div>
+  <div th:replace="~{commons/commons::header}"></div>
+  <div th:replace="~{commons/commons::sidebar}"></div>
+
+
+
+  <!--**********************************
+      Content body start
+  ***********************************-->
+  <div class="content-body">
+
+    <div class="row page-titles mx-0">
+      <div class="col p-md-0">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a th:href="@{/data/clear}"> >返回上一级</a></li>
+        </ol>
+      </div>
+    </div>
+    <!-- row -->
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-body">
+              <h4 class="card-title">类型处理</h4>
+              <form>
+                <table style="width: 100% !important; height: 250px !important;" class="table">
+                  <tr>
+                    <td><label><b>表：</b></label></td>
+                    <td>
+                      <select class="form-control" id="table">
+                        <option>-------请选择表-------</option>
+                        <option th:value="${name}" th:each="name : ${tableName}">
+                          [[${name}]]
+                        </option>
+                      </select>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <th>类型信息</th>
+                    <th>
+                      <div class="table-responsive">
+                        <table class="table">
+                          <tr>
+                            <th>字段名</th>
+                            <th>类型</th>
+                            <th>长度</th>
+                          </tr>
+                          <tbody id="field_body"></tbody>
+                        </table>
+                      </div>
+
+                    </th>
+
+                  </tr>
+
+                  <tr>
+                    <td colspan="2" align="right">
+                      <button type="button" class="btn mb-1 btn-rounded btn-outline-info" id="importBtn">类型转换</button>
+                      <a class="btn mb-1 btn-rounded btn-outline-light" th:href="@{/data/clear}">返回上一级</a>
+                    </td>
+                  </tr>
+                </table>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- #/ container -->
+</div>
+<!--**********************************
+    Content body end
+***********************************-->
+
+<!-- footer -->
+<div th:replace="commons/commons::footer"></div>
+
+
+
+</div>
+<!--**********************************
+    Main wrapper end
+***********************************-->
+
+<!--**********************************
+    Scripts
+***********************************-->
+<script th:src="@{/plugins/common/common.min.js}"></script>
+<script th:src="@{/js/custom.min.js}"></script>
+<script th:src="@{/js/settings.js}"></script>
+<script th:src="@{/js/gleek.js}"></script>
+<script th:src="@{/js/styleSwitcher.js}"></script>
+
+
+<script th:src="@{/plugins/jquery-validation/jquery.validate.min.js}"></script>
+<!-- Toastr -->
+<script th:src="@{/plugins/toastr/js/toastr.min.js}"></script>
+<script th:src="@{/plugins/toastr/js/toastr.init.js}"></script>
+
+</body>
+<script>
+
+  $('#table').change(function() {
+    $('#field_body').empty()
+
+    $.ajax({
+      url: '/clean/type/column/list',
+      type: 'post',
+      dataType: 'json',
+      data: {
+        tableName: $('#table option:selected').val()
+      },
+      success: function(data) {
+        if(data.status == 200) {
+          console.log(data.columns)
+          let tbody = document.getElementById('field_body')
+          // 目标表字段
+          table_field = data.columns
+
+          let type = ['varchar', 'int', 'double', 'date', 'datetime', 'tinyint', 'char', 'longtext']
+
+          for(let i = 0; i < table_field.length; i++) {
+            let tr = document.createElement('tr')
+
+            console.log(table_field[i].COLUMN_NAME)
+            let td1 = document.createElement('td')
+            tr.append(td1)
+            td1.innerHTML = table_field[i].COLUMN_NAME
+
+
+            let td2 = document.createElement('td')
+            let select = document.createElement('select')
+            for(let j = 0; j < type.length; j++) {
+              // console.log('------')
+              let option = document.createElement('option');
+              // console.log(type[j])
+              option.value = type[j]
+              option.innerText = type[j]
+              if (option.innerText == table_field[i].DATA_TYPE) {
+                option.selected = true
+              }
+              select.appendChild(option)
+
+            }
+            td2.appendChild(select)
+            tr.append(td2)
+
+            let td3 = document.createElement('td')
+            let input = document.createElement('input')
+            tr.append(td3)
+            if (table_field[i].CHARACTER_MAXIMUM_LENGTH == 	undefined || table_field[i].CHARACTER_MAXIMUM_LENGTH > 500) {
+              input.value = "0"
+            } else {
+              input.value = table_field[i].CHARACTER_MAXIMUM_LENGTH
+            }
+
+            td3.appendChild(input)
+
+            tbody.appendChild(tr)
+
+          }
+        } else {
+
+        }
+      }
+    })
+  })
+
+
+  $('#importBtn').click(function(data) {
+    let inputs = $('tbody input')
+    let selects = $('#field_body select option:selected')
+
+    if (inputs.length != selects.length) {
+      alert("请将信息填写完整")
+      return;
+    }
+    let typeLong = [];
+    let type = []
+    for(let i = 0; i <inputs.length; i++) {
+      typeLong.push(inputs[i].value)
+      type.push(selects[i].value)
+    }
+
+    console.log(type)
+    console.log(typeLong)
+    let tableName = $('#table option:selected').val()
+
+    // console.log('tableName=>' + tableName)
+
+    $.ajax({
+      url: '/clean/type/handle',
+      type: 'post',
+      dataType: 'json',
+      data: {
+        tableName: tableName,
+        type: JSON.stringify(type),
+        typeLong: JSON.stringify(typeLong)
+      },
+      success: function(data) {
+        if(data.status == 200) {
+          toastr.info('添加成功')
+          setTimeout(function() {
+            window.location.href = '/clean/type'
+          }, 2000)
+        } else {
+          toastr.info('添加失败，请稍后重试！')
+        }
+      }
+    })
+  })
+</script>
+</html>

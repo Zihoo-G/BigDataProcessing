@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>大数据智能加工系统</title>
+  <!-- Favicon icon -->
+  <link rel="icon" type="image/png" sizes="16x16" th:href="@{/images/favicon.png}">
+  <!-- Custom Stylesheet -->
+  <link th:href="@{/plugins/tables/css/datatable/dataTables.bootstrap4.min.css}" rel="stylesheet">
+  <link th:href="@{/plugins/toastr/css/toastr.min.css}" rel="stylesheet">
+  <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+<!--**********************************
+            Content body start
+        ***********************************-->
+<div class="content-body">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">[[${tableName}]]</h4>
+
+                        <button type="button" class="btn mb-1 btn-rounded btn-success" id="outputBtn">数据备份</button>
+
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered zero-configuration">
+                                <thead>
+                                <tr>
+                                    <th th:each="columnName : ${columnNames}">[[${columnName}]]</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="data : ${datas}">
+                                    <td th:each="columnName : ${columnNames}" th:text="${data.get(columnName)}">
+
+                                    </td>
+                                </tr>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- #/ container -->
+</div>
+<!--**********************************
+    Content body end
+***********************************-->
+</body>
+<!--**********************************
+    Scripts
+***********************************-->
+<script th:src="@{/plugins/common/common.min.js}"></script>
+<script th:src="@{/js/custom.min.js}"></script>
+<script th:src="@{/js/settings.js}"></script>
+<script th:src="@{/js/gleek.js}"></script>
+<script th:src="@{/js/styleSwitcher.js}"></script>
+
+<script th:src="@{/plugins/tables/js/jquery.dataTables.min.js}"></script>
+<script th:src="@{/plugins/tables/js/datatable/dataTables.bootstrap4.min.js}"></script>
+<script th:src="@{/plugins/tables/js/datatable-init/datatable-basic.min.js}"></script>
+<script>
+    $('#outputBtn').click(function(data) {
+        if(window.confirm("确定要进行数据备份吗？")) {
+            // console.log("是的")
+            let tableName = $('.card-title').html()
+
+            console.log(tableName)
+
+            $.ajax({
+                url: '/data/output',
+                type: 'post',
+                dataType: 'json',
+                data: {
+                    tableName: tableName
+                },
+                success: function(data) {
+
+                }
+            })
+            return true;
+        } else {
+
+            return false;
+
+        }
+    })
+</script>
+</html>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--namespace绑定一个对应的Dao接口-->
+<mapper namespace="com.gazikel.mapper.FileMapper">
+    <insert id="addFile" parameterType="com.gazikel.pojo.File" >
+        insert into file(`name`, `tableName`, `uid`, `extension`, `url`) values(#{name}, #{tableName}, #{uid}, #{extension}, #{url})
+    </insert>
+
+    <select id="getAllFile" resultType="com.gazikel.pojo.File">
+        select * from file;
+    </select>
+
+        <update id="updateTableNameByTableName" parameterType="string">
+        update file set tableName = #{tableName} where tableName = #{name}
+    </update>
+
+    <select id="getFileById" resultType="com.gazikel.pojo.File" parameterType="integer">
+        select * from file where id = #{id}
+    </select>
+</mapper>
